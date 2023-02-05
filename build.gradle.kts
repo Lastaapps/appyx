@@ -13,48 +13,45 @@ buildscript {
 }
 
 plugins {
-    id("appyx-collect-sarif")
-    id("com.autonomousapps.dependency-analysis") version libs.versions.dependencyAnalysis.get()
-    id("release-dependencies-diff-compare")
-    id("release-dependencies-diff-create") apply false
+//    id("com.autonomousapps.dependency-analysis") version libs.versions.dependencyAnalysis.get()
 }
 
-dependencyAnalysis {
-    issues {
-        all {
-            onIncorrectConfiguration {
-                severity("fail")
-            }
-            onUnusedDependencies {
-                severity("fail")
-
-                exclude(
-                    // Needed for compose '@Preview'. The annotation is actually within
-                    // androidx.compose.ui:ui-tooling-preview, hence the need to exclude.
-                    "androidx.compose.ui:ui-tooling",
-
-                    // This is used to add the testing activity to the debug manifest
-                    // However since not code is referenced, it is raised as unused.
-                    ":libraries:testing-ui-activity"
-                )
-            }
-        }
-        project(":libraries:testing-junit4") {
-            onUnusedDependencies {
-                severity("fail")
-                // Not used by the module, but exposed via api to avoid adding two dependencies.
-                exclude(":libraries:testing-unit-common")
-            }
-        }
-        project(":libraries:testing-junit5") {
-            onUnusedDependencies {
-                severity("fail")
-                // Not used by the module, but exposed via api to avoid adding two dependencies.
-                exclude(":libraries:testing-unit-common")
-            }
-        }
-    }
-}
+//dependencyAnalysis {
+//    issues {
+//        all {
+//            onIncorrectConfiguration {
+//                severity("fail")
+//            }
+//            onUnusedDependencies {
+//                severity("fail")
+//
+//                exclude(
+//                    // Needed for compose '@Preview'. The annotation is actually within
+//                    // androidx.compose.ui:ui-tooling-preview, hence the need to exclude.
+//                    "androidx.compose.ui:ui-tooling",
+//
+//                    // This is used to add the testing activity to the debug manifest
+//                    // However since not code is referenced, it is raised as unused.
+//                    ":libraries:testing-ui-activity"
+//                )
+//            }
+//        }
+//        project(":libraries:testing-junit4") {
+//            onUnusedDependencies {
+//                severity("fail")
+//                // Not used by the module, but exposed via api to avoid adding two dependencies.
+//                exclude(":libraries:testing-unit-common")
+//            }
+//        }
+//        project(":libraries:testing-junit5") {
+//            onUnusedDependencies {
+//                severity("fail")
+//                // Not used by the module, but exposed via api to avoid adding two dependencies.
+//                exclude(":libraries:testing-unit-common")
+//            }
+//        }
+//    }
+//}
 
 tasks.register("clean", Delete::class) {
     delete(rootProject.buildDir)
@@ -71,7 +68,6 @@ allprojects {
 }
 
 subprojects {
-    plugins.apply("release-dependencies-diff-create")
 
     tasks.withType<KotlinCompile>().configureEach {
         kotlinOptions {
