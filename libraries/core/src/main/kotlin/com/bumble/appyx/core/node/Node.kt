@@ -13,7 +13,6 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
@@ -39,8 +38,8 @@ import com.bumble.appyx.core.plugin.plugins
 import com.bumble.appyx.core.state.MutableSavedStateMap
 import com.bumble.appyx.core.state.MutableSavedStateMapImpl
 import com.bumble.appyx.core.state.SavedStateMap
-import kotlinx.coroutines.withContext
 import java.util.UUID
+import kotlinx.coroutines.withContext
 
 @Suppress("TooManyFunctions")
 @Stable
@@ -184,8 +183,9 @@ open class Node(
         }
     }
 
-    override fun getLifecycle(): Lifecycle =
-        nodeLifecycle.lifecycle
+    override val lifecycle get() = nodeLifecycle.lifecycle
+    override val viewModelStore get() = nodeViewModelStore
+
 
     override fun updateLifecycleState(state: Lifecycle.State) {
         if (lifecycle.currentState == state) return
@@ -260,6 +260,4 @@ open class Node(
         }
 
     }
-
-    override fun getViewModelStore(): ViewModelStore = nodeViewModelStore
 }
