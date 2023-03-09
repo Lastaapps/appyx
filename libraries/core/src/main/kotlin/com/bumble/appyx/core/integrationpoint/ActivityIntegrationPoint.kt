@@ -27,7 +27,8 @@ open class ActivityIntegrationPoint(
 
     val viewModel = IntegrationPointViewModel.getInstance(activity)
 
-    fun isChangingConfigurations(): Boolean = activity.isChangingConfigurations
+    override val isChangingConfigurations: Boolean
+        get() = activity.isChangingConfigurations
 
     fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         activityBoundary.onActivityResult(requestCode, resultCode, data)

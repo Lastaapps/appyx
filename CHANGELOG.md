@@ -1,7 +1,25 @@
 # Changelog
 
 ## Pending changes
+
 –
+
+---
+
+## 1.0.5
+
+- [#370](https://github.com/bumble-tech/appyx/pull/370) – **Added**: `RetainedInstanceStore` has two new functions which allows a developer to check whether an object is retained. These are: `isRetainedByStoreId` and `isRetained`.
+
+<div style="text-align: center"><small>04 Mar 2023</small></div>
+
+---
+
+## 1.0.4
+
+- [#361](https://github.com/bumble-tech/appyx/pull/361) – **Added**: Introduced `RetainedInstanceStore`. This provides developers the ability to retain objects between configuration changes.
+- [#336](https://github.com/bumble-tech/appyx/pull/336) – **Updated**: ChildAware API does not enforce Node subtypes only anymore, making it possible to use interfaces as public contracts for child nodes.
+
+<div style="text-align: center"><small>20 Feb 2023</small></div>
 
 ---
 

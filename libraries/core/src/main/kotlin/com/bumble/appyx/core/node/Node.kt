@@ -2,6 +2,7 @@ package com.bumble.appyx.core.node
 
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.annotation.CallSuper
+import androidx.annotation.VisibleForTesting
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
@@ -38,16 +39,24 @@ import com.bumble.appyx.core.plugin.plugins
 import com.bumble.appyx.core.state.MutableSavedStateMap
 import com.bumble.appyx.core.state.MutableSavedStateMapImpl
 import com.bumble.appyx.core.state.SavedStateMap
-import java.util.UUID
+import com.bumble.appyx.core.store.RetainedInstanceStore
 import kotlinx.coroutines.withContext
+import java.util.UUID
 
 @Suppress("TooManyFunctions")
 @Stable
-open class Node(
-    buildContext: BuildContext,
+open class Node @VisibleForTesting internal constructor(
+    private val buildContext: BuildContext,
     val view: NodeView = EmptyNodeView,
+    private val retainedInstanceStore: RetainedInstanceStore,
     plugins: List<Plugin> = emptyList()
 ) : NodeLifecycle, NodeView by view, RequestCodeClient, ViewModelStoreOwner {
+
+    constructor(
+        buildContext: BuildContext,
+        view: NodeView = EmptyNodeView,
+        plugins: List<Plugin> = emptyList()
+    ) : this(buildContext, view, RetainedInstanceStore, plugins)
 
     @Suppress("LeakingThis") // Implemented in the same way as in androidx.Fragment
     private val nodeLifecycle = NodeLifecycleImpl(this)
@@ -79,7 +88,9 @@ open class Node(
         }
     private var wasBuilt = false
 
-    val id = getNodeId(buildContext)
+    val id: String
+        get() = buildContext.identifier
+
     private val nodeViewModelStore by lazy {
         (integrationPoint as ActivityIntegrationPoint).viewModel.getViewModelStoreForNode(
             id
@@ -100,19 +111,11 @@ open class Node(
 
         lifecycle.addObserver(object : DefaultLifecycleObserver {
             override fun onDestroy(owner: LifecycleOwner) {
-                if (!(integrationPoint as ActivityIntegrationPoint).isChangingConfigurations()) {
+                if (!(integrationPoint as ActivityIntegrationPoint).isChangingConfigurations) {
                     (integrationPoint as ActivityIntegrationPoint).viewModel.clear(id)
                 }
             }
         })
-    }
-
-    private fun getNodeId(buildContext: BuildContext): String {
-        val state = buildContext.savedStateMap ?: return UUID.randomUUID().toString()
-
-        return state[NODE_ID_KEY] as String? ?: error(
-            "super.onSaveInstanceState() was not called for the node: ${this::class.qualifiedName}"
-        )
     }
 
     @Deprecated(
@@ -199,6 +202,9 @@ open class Node(
         }
         nodeLifecycle.updateLifecycleState(state)
         if (state == Lifecycle.State.DESTROYED) {
+            if (!integrationPoint.isChangingConfigurations) {
+                retainedInstanceStore.clearStore(id)
+            }
             plugins<Destroyable>().forEach { it.destroy() }
         }
     }
@@ -214,7 +220,7 @@ open class Node(
 
     @CallSuper
     protected open fun onSaveInstanceState(state: MutableSavedStateMap) {
-        state[NODE_ID_KEY] = id
+        buildContext.onSaveInstanceState(state)
     }
 
     fun finish() {
@@ -248,8 +254,6 @@ open class Node(
         plugins<UpNavigationHandler>().any { it.handleUpNavigation() }
 
     companion object {
-        private const val NODE_ID_KEY = "node.id"
-
         // BackPressHandler is correct when only one of its properties is implemented.
         private fun BackPressHandler.isCorrect(): Boolean {
             val listIsOverriddenOrPluginIgnored = onBackPressedCallback == null
